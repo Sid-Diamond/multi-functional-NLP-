@@ -311,7 +311,10 @@ if __name__ == "__main__":
                     histogram.save_png(filename)
                 fig_counter += 1
 
-        if generate_line_graph and ('time_field' in data.columns):
+        # The dataset handler stores timestamp information under the "Time"
+        # column. The previous check looked for a literal 'time_field' column,
+        # which does not exist and prevented line graphs from being generated.
+        if generate_line_graph and ('Time' in data.columns):
             line_graph = LineGraphPlot(
                 data=data,
                 fig_counter=fig_counter,
