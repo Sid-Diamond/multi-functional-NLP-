@@ -84,7 +84,7 @@
         "num_labels": 6
     }, 
     "JyotiNayak/political_ideologies": {
-        "dataset reference": "GPT Political Idealogy",
+        "dataset reference": "GPT Political Ideology",
         "text_field": "statement",
         "label_field": "label",
         "time_field": "",
