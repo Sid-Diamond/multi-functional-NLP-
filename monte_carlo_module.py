@@ -106,8 +106,10 @@ class MonteCarloDropoutCSVDataSaver(SentimentCSVDataSaver):
             mean_vals = []
             std_vals = []
             for r in mc_results:
+                mean_vals.append(r["mc_mean"])
                 std_vals.append(r["mc_std"])
 
+            df["MC Continuous Mean"] = mean_vals
             df["MC Continuous Std"] = std_vals
 
         else:
