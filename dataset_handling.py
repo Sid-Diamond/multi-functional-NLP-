@@ -117,6 +117,23 @@ class DatasetHandler:
             raise ValueError(f"Dataset configuration for '{dataset_name}' not found.")
 
     def sample_dataset(self, dataset, sample_size, shuffle_data):
+        """Sample and optionally shuffle a dataset.
+
+        Parameters
+        ----------
+        dataset : datasets.Dataset
+            The dataset to sample from.
+        sample_size : int
+            Number of examples to return. If ``None`` or larger than the
+            available data, the whole dataset is returned.
+        shuffle_data : bool
+            Whether to shuffle the data before sampling.
+
+        Returns
+        -------
+        datasets.Dataset
+            The sampled dataset.
+        """
         # Print statement showing that the sampling process has started
         print(f"Sampling {sample_size} data points from dataset...")
 
