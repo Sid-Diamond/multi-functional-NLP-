@@ -106,8 +106,10 @@ class MonteCarloDropoutCSVDataSaver(SentimentCSVDataSaver):
             mean_vals = []
             std_vals = []
             for r in mc_results:
+                mean_vals.append(r["mc_mean"])
                 std_vals.append(r["mc_std"])
 
+            df["MC Continuous Mean"] = mean_vals
             df["MC Continuous Std"] = std_vals
 
         else:
@@ -124,17 +126,22 @@ class MonteCarloDropoutCSVDataSaver(SentimentCSVDataSaver):
                 class_labels = self.class_labels
 
             # We'll build separate arrays for each column
+            means_per_label = [[] for _ in range(num_labels)]
             stds_per_label  = [[] for _ in range(num_labels)]
 
             for r in mc_results:
                 # r["mc_mean"] => list of shape [num_labels], r["mc_std"] => same
+                mean_arr = r["mc_mean"]
                 std_arr  = r["mc_std"]
                 for i in range(num_labels):
+                    means_per_label[i].append(mean_arr[i])
                     stds_per_label[i].append(std_arr[i])
 
             # Now we assign them to new columns
             for i in range(num_labels):
+                col_mean = f"MC Mean Probability Dist {i+1}: {class_labels[i]}"
                 col_std  = f"MC Std Probability Dist {i+1}: {class_labels[i]}"
+                df[col_mean] = means_per_label[i]
                 df[col_std]  = stds_per_label[i]
 
         # Write back to CSV
