@@ -5,13 +5,12 @@ This repository implements a comprehensive text analytics pipeline that combines
 
 In addition, the pipeline incorporates uncertainty measurements: one approach is a bachelors thesis derived exploration in uncertainty, which uses a Fisher information-based adaptation within a custom FAdam optimizer to assess layer-wise variance, while another employs Monte Carlo Dropout—where dropout remains active during inference to generate multiple stochastic forward passes, yielding estimates of the mean and standard deviation for both regression and classification outputs. These uncertainty metrics are integrated into the data handling workflow through CSV data savers, enabling detailed tracking and analysis of prediction reliability across tasks.
 
-```markdown
+
 ## Project Structure
 
 The repository is organised to separate pipeline logic, configuration, documentation, and evaluation. The structure is as follows:
 
-```
-.
+'''
 ├── main.py                # Entry point for running the full pipeline
 ├── README.md              # Project description and usage
 ├── src/                   # Modular components for topic modelling, clustering, and uncertainty
@@ -31,6 +30,6 @@ The repository is organised to separate pipeline logic, configuration, documenta
 ```
 
 This structure supports modular experimentation while maintaining readability and reproducibility.
-```
+
 
 
