@@ -10,7 +10,7 @@ In addition, the pipeline incorporates uncertainty measurements: one approach is
 
 The repository is organised to separate pipeline logic, configuration, documentation, and evaluation. The structure is as follows:
 
-'''
+
 ├── main.py                # Entry point for running the full pipeline
 ├── README.md              # Project description and usage
 ├── src/                   # Modular components for topic modelling, clustering, and uncertainty
@@ -27,7 +27,6 @@ The repository is organised to separate pipeline logic, configuration, documenta
 ├── tests/                 # Unit and integration tests for pipeline components
 ├── docs/                  # Supplementary materials, including final thesis
 │   └── Bsc-Thesis.pdf
-```
 
 This structure supports modular experimentation while maintaining readability and reproducibility.
 
