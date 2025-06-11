@@ -1,5 +1,5 @@
 
-## Undergraduate Bsc project By Sid Diamond (Imperial College London), Henry Hodges (Imperial College London) and Aurelius Caesar (Imperial College London). Supervised by Dr Aidan Crilly (Imperial College London)
+## Undergraduate Bsc project By Sid Diamond , Henry Hodges and Aurelius Caesar. Supervised by Dr Aidan Crilly (Imperial College London)
 
 This repository implements a comprehensive text analytics pipeline that combines sentiment analysis, topic modeling, clustering, and data visualization with uncertainty quantification. It supports both fine-tuning and inference for transformer-based models (ALBERT/BERT), guided by flexible dataset configurations. Key components include modules for text cleaning, tokenization, and preprocessing; topic extraction via BERTopic and LDA; and clustering with KMeans enhanced by PCA.
 
