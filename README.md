@@ -8,23 +8,6 @@ In addition, the pipeline incorporates uncertainty measurements: one approach is
 ## Project Structure
 
 The repository is organised to separate pipeline logic, configuration, documentation, and evaluation. The structure is as follows:
-├── main.py # Entry point for running the full pipeline
-├── README.md # Project description and usage
-├── src/ # Modular components for topic modelling, clustering, and uncertainty
-│ ├── bertopic_module.py
-│ ├── lda_module.py
-│ ├── monte_carlo_module.py
-│ ├── metadata_module.py
-│ ├── dataset_handling.py
-│ ├── alb_s1.py
-│ └── kcluster_module.py
-├── data/ # JSON configuration files for datasets and model setup
-│ ├── metadata.json
-│ └── dataset_configs.json
-├── tests/ # Unit and integration tests for pipeline components
-├── docs/ # Supplementary materials, including final thesis
-│ └── Bsc-Thesis.pdf
-
-
+<pre> ``` . ├── main.py # Entry point for running the full pipeline ├── README.md # Project description and usage ├── src/ # Modular components for topic modelling, clustering, and uncertainty │ ├── bertopic_module.py │ ├── lda_module.py │ ├── monte_carlo_module.py │ ├── metadata_module.py │ ├── dataset_handling.py │ ├── alb_s1.py │ └── kcluster_module.py ├── data/ # JSON configuration files for datasets and model setup │ ├── metadata.json │ └── dataset_configs.json ├── tests/ # Unit and integration tests for pipeline components ├── docs/ # Supplementary materials, including final thesis │ └── Bsc-Thesis.pdf ``` </pre>
 This structure supports modular experimentation while maintaining readability and reproducibility.
 
