@@ -1485,14 +1485,14 @@ class LDA_Visualisation(BasePlot):
         else:
             print("No LDA visualization available to save.")
 
-class BERTVisualization(BasePlot):
+class BERT_Visualisation(BasePlot):
     def __init__(self, data, bertopic_processor, **kwargs):
         super().__init__(data, **kwargs)
         self.bertopic_processor = bertopic_processor
 
     def parse_time_data(self):
         """
-        Parse time data specific to BERTVisualization.
+        Parse time data specific to BERT_Visualisation.
         """
         time_column = self.data_preparation.time_column or 'Time'
         format_string = self.data_preparation.time_handling.format_string
