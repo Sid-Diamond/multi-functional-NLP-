@@ -1,12 +1,4 @@
 import os
-
-# ─── SAFETENSOR FOLDER TOGGLE ───────────────────────────────────
-# Set to True to load from your private local_experiments folder (git‐ignored),
-# False to load from the git‐ready folder (tracked via LFS).
-
-
-# ────────────────────────────────────────────────────────────────
-
 from src.dataset_handling import DatasetHandler
 
 from src.alb_s1 import (
@@ -53,7 +45,7 @@ shuffle_data = True
 split = 'train'
 
 sentiment_analysis = True
-sentiment_context = 'Fadam take 4'
+sentiment_context = 'FAdam 14. Political Idealogy'
 sentiment_mode = 'classic'
 max_seq_length = 64
 model_size = 'albert-base'

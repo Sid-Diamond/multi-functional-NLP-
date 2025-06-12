@@ -91,7 +91,7 @@ class SentimentBaseProcessor:
         """
         Loads dataset-specific configurations from data/dataset_configs.json.
         """
-        config_path = DataFiles.path("dataset_configs.json")
+        config_path = DataFiles.path("data/dataset_configs.json")
         with config_path.open('r', encoding='utf-8') as f:
             configs = json.load(f)
         if dataset_name not in configs:
@@ -118,7 +118,7 @@ class SentimentBaseProcessor:
 
         if sentiment_context:
             try:
-                meta_path = DataFiles.path("metadata.json")
+                meta_path = DataFiles.path("data/metadata.json")
                 with meta_path.open('r', encoding='utf-8') as f:
                     metadata_list = json.load(f)
                 meta = next((m for m in metadata_list if m['version_name'] == sentiment_context), None)
@@ -1836,7 +1836,7 @@ class SentimentFineTuner(SentimentBaseProcessor):
         if start_from_context and sentiment_context:
             metadata["started_from_context"] = sentiment_context
 
-        meta_file = 'metadata.json'
+        meta_file = DataFiles.path("data/metadata.json")
         if os.path.exists(meta_file):
             with open(meta_file, 'r') as f:
                 meta_list = json.load(f)

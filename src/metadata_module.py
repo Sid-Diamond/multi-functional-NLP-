@@ -22,7 +22,8 @@ class MetadataCSVDataSaver:
     @staticmethod
     def _metadata_path():
         """Return Path to data/metadata.json (create file if missing)."""
-        meta_p = DataFiles.path("metadata.json")
+        meta_p = DataFiles.path("data/metadata.json")
+
         if not meta_p.exists():
             meta_p.parent.mkdir(parents=True, exist_ok=True)
             meta_p.write_text("[]", encoding="utf-8")

@@ -98,7 +98,7 @@ class DatasetHandler:
         """
         Loads dataset-specific configurations from data/dataset_configs.json.
         """
-        config_fp = DataFiles.path('dataset_configs.json')
+        config_fp = DataFiles.path('data/dataset_configs.json')
         if not config_fp.exists():
             raise FileNotFoundError(f"Configuration file not found at {config_fp}.")
         with config_fp.open('r', encoding='utf-8') as f:
