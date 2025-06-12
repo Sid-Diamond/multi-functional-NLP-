@@ -1,3 +1,12 @@
+import os
+
+# ─── SAFETENSOR FOLDER TOGGLE ───────────────────────────────────
+# Set to True to load from your private local_experiments folder (git‐ignored),
+# False to load from the git‐ready folder (tracked via LFS).
+
+
+# ────────────────────────────────────────────────────────────────
+
 from src.dataset_handling import DatasetHandler
 
 from src.alb_s1 import (
@@ -51,7 +60,9 @@ model_size = 'albert-base'
 
 fine_tune_or_inference = 'inference'
 start_from_context = False
+USE_LOCAL_EXPERIMENTS = False
 save_fine_tune = 'yes'
+
 class_labels = ["Liberalism","Conservatism"]
 societally_linear = "yes"
 fine_tune_version_name = 'Fun Again hmmn'
@@ -96,6 +107,14 @@ generate_bertopic_dtm_visualization = True
 generate_bertopic_barchart_visualization = True
 
 # MAIN PIPELINE
+MODEL_VERSIONS_ROOT = (
+    "model_versions_local_experiments"
+    if USE_LOCAL_EXPERIMENTS
+    else "model_versions_git_ready"
+)
+# make available to downstream modules
+os.environ["MODEL_VERSIONS_ROOT"] = MODEL_VERSIONS_ROOT
+
 if __name__ == "__main__":
     dataset_handler = DatasetHandler(csv_file='output.csv')
 
