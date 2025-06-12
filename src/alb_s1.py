@@ -130,7 +130,15 @@ class SentimentBaseProcessor:
                 weights_fp = weights_fp.replace("\\", "/")
                 if not os.path.isabs(weights_fp):
                     weights_fp = str(DataFiles.path(weights_fp))
-                dir_for_weights = os.path.dirname(weights_fp)
+                # Either a direct file path or a directory
+                if os.path.isdir(weights_fp):
+                    dir_for_weights = weights_fp
+                else:
+                    dir_for_weights = os.path.dirname(weights_fp)
+                if not os.path.isdir(dir_for_weights):
+                    raise FileNotFoundError(
+                        f"Model directory '{dir_for_weights}' does not exist."
+                    )
                 self.num_labels = meta.get('output_mode')
                 if self.num_labels is None:
                     raise ValueError("Metadata must contain 'output_mode'.")
