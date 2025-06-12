@@ -1,0 +1,22 @@
+# ─── Local scratch checkpoints ─────────────────────────────────────
+# anything you throw in here stays local and won't be committed
+model_versions/local_experiments/
+
+# ─── Git-ready models (tracked via Git LFS) ───────────────────────
+# NB: run `git lfs install` and `git lfs track "model_versions/git_ready_models/**/*.safetensors"`
+# before you add/commit these.
+model_versions/git_ready_models/**/*.safetensors
+
+# ─── Python artifacts ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ─── Environment & editor configs ─────────────────────────────────
+.env
+*.env
+.vscode/
