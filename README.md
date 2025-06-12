@@ -31,5 +31,19 @@ The repository is organised to separate pipeline logic, configuration, documenta
 
 This structure supports modular experimentation while maintaining readability and reproducibility.
 
+## Model Version Workflow
+
+Fine-tuned models can be stored either locally (ignored by Git) or in a
+Git-tracked location. The behaviour is controlled by the `USE_LOCAL_EXPERIMENTS`
+toggle in `main.py`.
+
+* When `USE_LOCAL_EXPERIMENTS` is `True`, models are saved under
+  `model_versions/local_experiments/`.
+* When it is `False`, models are saved under
+  `model_versions/git_ready_models/` and can be committed with Git LFS.
+
+To share a locally trained model, manually copy its directory from the
+`local_experiments` folder to `git_ready_models` before committing.
+
 
 

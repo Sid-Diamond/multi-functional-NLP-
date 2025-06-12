@@ -100,9 +100,9 @@ generate_bertopic_barchart_visualization = True
 
 # MAIN PIPELINE
 MODEL_VERSIONS_ROOT = (
-    "model_versions_local_experiments"
+    "model_versions/local_experiments"
     if USE_LOCAL_EXPERIMENTS
-    else "model_versions_git_ready"
+    else "model_versions/git_ready_models"
 )
 # make available to downstream modules
 os.environ["MODEL_VERSIONS_ROOT"] = MODEL_VERSIONS_ROOT
