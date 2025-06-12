@@ -1,16 +1,38 @@
-from dataset_handling import DatasetHandler
-from alb_s1 import (
+from src.dataset_handling import DatasetHandler
+
+from src.alb_s1 import (
     SentimentFineTuner,
     SentimentInferencer,
-    SentimentCSVDataSaver
+    SentimentCSVDataSaver,
 )
-from lda_module import LDATextProcessor, LDAProcessor, LDACSVDataSaver
-from kcluster_module import TextProcessingAndDatabase, KclusterAnalysis, KclusterCSVDataSaver
-from bertopic_module import BERTopicProcessor, BERTopicCSVDataSaver, TextProcessing
-from metadata_module import MetadataCSVDataSaver
-from Data_Visualisation import (
-    BasePlot, ScientificTable, HistogramPlot,
-    LineGraphPlot, LDA_Visualisation, BERTVisualization
+
+from src.lda_module import (
+    LDATextProcessor,
+    LDAProcessor,
+    LDACSVDataSaver,
+)
+
+from src.kcluster_module import (
+    TextProcessingAndDatabase,
+    KclusterAnalysis,
+    KclusterCSVDataSaver,       # ← now imported
+)
+
+from src.bertopic_module import (
+    BERTopicProcessor,
+    BERTopicCSVDataSaver,
+    TextProcessing,
+)
+
+from src.metadata_module import MetadataCSVDataSaver
+
+from src.Data_Visualisation import (
+    BasePlot,
+    ScientificTable,
+    HistogramPlot,
+    LineGraphPlot,
+    LDA_Visualisation,           # ← now imported
+    BERT_Visualisation,          # ← if you use this, import it too
 )
 
 our_datasets = 'climatebert/climate_sentiment'
@@ -347,7 +369,7 @@ if __name__ == "__main__":
             if 'bertopic_processor' not in locals():
                 print("No BERTopic processor found; skipping BERTopic visualizations.")
             else:
-                bert_viz = BERTVisualization(
+                bert_viz = BERT_Visualisation(
                     data=data,
                     bertopic_processor=bertopic_processor,
                     sentiment_context=sentiment_context
