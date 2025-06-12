@@ -608,7 +608,7 @@
     {
         "version_name": "FAdam 14. Political Idealogy",
         "dataset": "JyotiNayak/political_ideologies",
-        "weights_filepath": "model_versions\\FAdam 14. Political Idealogy\\pytorch_model.bin",
+        "weights_filepath": "model_versions/local_experiments/FAdam 14. Political Ideology",
         "output_mode": 2,
         "model_type": "albert-base",
         "sample_size": 50,

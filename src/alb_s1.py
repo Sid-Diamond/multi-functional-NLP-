@@ -8,7 +8,7 @@ from torch.optim.optimizer import Optimizer
 from typing import Tuple, Optional, Dict
 from transformers import default_data_collator
 import os
-import math
+import datetime
 import random
 import numpy as np
 from tqdm import tqdm
@@ -1792,59 +1792,52 @@ class SentimentFineTuner(SentimentBaseProcessor):
             loss_function=self.loss_function
         )
         return trainer
+    def _save_model_and_metadata(
+        self,
+        version_name: str,
+        hyperparams: dict,
+        dataset_name: str,
+        eval_metrics: dict,
+        class_labels=None,
+        societally_linear=None,
+        start_from_context=False,
+        sentiment_context=None
+    ):
+        import os
+        import json
+        from src.metadata_module import MetadataCSVDataSaver
 
-    def _save_model_and_metadata(self, version_name, hyperparams, dataset_name, eval_metrics,
-                                 class_labels=None, societally_linear=None,
-                                 start_from_context=False, sentiment_context=None):
-        import time, json
-        if not version_name:
-            version_name = f"version_{int(time.time())}"
-        print(f"Saving model with version_name '{version_name}'")
-        save_dir = os.path.join('model_versions', version_name)
+        # 1) Build save directory under local_experiments
+        save_dir = os.path.join('model_versions', 'local_experiments', version_name)
         os.makedirs(save_dir, exist_ok=True)
+
+        # 2) Save the model weights/config
         self.model.save_pretrained(save_dir)
 
+        # 3) Prepare metadata entry
         metadata = {
             'version_name': version_name,
             'dataset': dataset_name,
-            'weights_filepath': os.path.join(save_dir, 'pytorch_model.bin'),
+            # point to the directory only; HF loader will auto-detect .bin or .safetensors
+            'weights_filepath': save_dir,
             'output_mode': self.num_labels,
             'model_type': self.model_size,
-            'sample_size': self.current_sample_size if hasattr(self, 'current_sample_size') else "unknown",
+            'hyperparameters': hyperparams,
+            'eval_metrics': eval_metrics,
+            'sample_size': getattr(self, 'current_sample_size', 'unknown'),
+            'generated_at': datetime.utcnow().isoformat() + 'Z'
         }
-        if self.num_labels == 1:
-            metadata['continuous_label'] = "Sentiment"
-        else:
-            final_class_labels = []
-            for i in range(self.num_labels):
-                if class_labels and i < len(class_labels):
-                    final_class_labels.append(class_labels[i])
-                else:
-                    final_class_labels.append(f"Class_{i}")
-            metadata['class_labels'] = final_class_labels
 
-        if societally_linear is not None:
-            metadata["societally_linear"] = societally_linear
-
-        if hyperparams:
-            for k, v in hyperparams.items():
-                metadata[str(k)] = v
-
-        if eval_metrics:
-            metadata.update(eval_metrics)
-
-        if start_from_context and sentiment_context:
-            metadata["started_from_context"] = sentiment_context
-
-        meta_file = DataFiles.path("data/metadata.json")
-        if os.path.exists(meta_file):
-            with open(meta_file, 'r') as f:
-                meta_list = json.load(f)
-        else:
-            meta_list = []
-        meta_list.append(metadata)
-        with open(meta_file, 'w') as f:
-            json.dump(meta_list, f, indent=4)
+        # 4) Append to data/metadata.json via the existing helper
+        meta_path = MetadataCSVDataSaver._metadata_path()
+        try:
+            existing = json.loads(meta_path.read_text(encoding='utf-8'))
+            if not isinstance(existing, list):
+                existing = []
+        except Exception:
+            existing = []
+        existing.append(metadata)
+        meta_path.write_text(json.dumps(existing, indent=4), encoding='utf-8')
 
         return {'save_directory': save_dir, 'version_name': version_name}
 
