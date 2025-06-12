@@ -126,6 +126,10 @@ class SentimentBaseProcessor:
                     raise FileNotFoundError(f"No metadata found for '{sentiment_context}'.")
 
                 weights_fp = meta['weights_filepath']
+                # handle Windows-style backslashes and relative paths
+                weights_fp = weights_fp.replace("\\", "/")
+                if not os.path.isabs(weights_fp):
+                    weights_fp = str(DataFiles.path(weights_fp))
                 dir_for_weights = os.path.dirname(weights_fp)
                 self.num_labels = meta.get('output_mode')
                 if self.num_labels is None:
@@ -1859,7 +1863,10 @@ class SentimentInferencer(SentimentBaseProcessor):
             if not entry:
                 print(f"No metadata found for context '{sentiment_context}'.")
                 return
-            cov_path = os.path.join(os.path.dirname(entry['weights_filepath']), "cov_matrix.pt")
+            w_fp = entry['weights_filepath'].replace("\\", "/")
+            if not os.path.isabs(w_fp):
+                w_fp = str(DataFiles.path(w_fp))
+            cov_path = os.path.join(os.path.dirname(w_fp), "cov_matrix.pt")
             if not os.path.isfile(cov_path):
                 print(f"No covariance file found at {cov_path}.")
                 return
