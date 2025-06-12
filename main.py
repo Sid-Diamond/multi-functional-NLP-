@@ -31,8 +31,8 @@ from src.Data_Visualisation import (
     ScientificTable,
     HistogramPlot,
     LineGraphPlot,
-    LDA_Visualisation,           # ← now imported
-    BERT_Visualisation,          # ← if you use this, import it too
+    LDA_Visualisation,         
+    BERT_Visualisation,          
 )
 
 our_datasets = 'climatebert/climate_sentiment'
