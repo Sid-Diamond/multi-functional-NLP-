@@ -1,125 +1,115 @@
+# src/metadata_module.py
+from __future__ import annotations
+import json
+from typing import List, Optional
+
+# Re-use the path helper defined in dataset_handling.py
+from src.dataset_handling import DataFiles
+
+
 class MetadataCSVDataSaver:
+    """
+    Adds a one-shot “metadata” column to the run’s output CSV.
+    """
+
     def __init__(self, dataset_handler):
         self.dataset_handler = dataset_handler
 
-    def load_metadata_json(self):
-        """
-        Loads the metadata.json file.
-        """
-        import json
+    # ------------------------------------------------------------------ #
+    # 1) Centralised JSON helpers
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _metadata_path():
+        """Return Path to data/metadata.json (create file if missing)."""
+        meta_p = DataFiles.path("metadata.json")
+        if not meta_p.exists():
+            meta_p.parent.mkdir(parents=True, exist_ok=True)
+            meta_p.write_text("[]", encoding="utf-8")
+        return meta_p
+
+    def _load_metadata_json(self) -> Optional[List[dict]]:
+        """Load the *list* stored in metadata.json, or None on error."""
         try:
-            with open('metadata.json', 'r') as f:
-                metadata_list = json.load(f)
-            return metadata_list
-        except FileNotFoundError:
-            print("metadata.json file not found.")
+            with self._metadata_path().open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError) as err:
+            print(f"[MetadataCSVDataSaver] Failed to load metadata.json → {err}")
             return None
+
+    # ------------------------------------------------------------------ #
+    # 2) Public API – append a metadata column
+    # ------------------------------------------------------------------ #
 
     def save_metadata(
         self,
-        your_dataset_toggle,
-        our_datasets,
-        sample_size,
-        shuffle_data,
-        sentiment_context,
-        LDA_analysis,
-        LDA_num_topics,
-        version_name,
-        model_type=None  # Added model_type parameter
-    ):
+        *,
+        your_dataset_toggle: bool,
+        our_datasets: str | None,
+        sample_size: int,
+        shuffle_data: bool,
+        sentiment_context: str | None,
+        LDA_analysis: bool,
+        LDA_num_topics: int | None,
+        version_name: str | None,
+        model_type: str | None = None,
+    ) -> None:
         """
-        Saves metadata to the CSV file.
+        Assemble a list of human-readable run parameters and append
+        them to the next free “Metadata …” column in your run CSV.
         """
-        # Read the existing CSV file
-        df = self.dataset_handler.read_csv()
 
-        # Prepare metadata entries
-        metadata_entries = []
+        # ------------------------------------------------------------------
+        # (A) Build the list of descriptive strings
+        # ------------------------------------------------------------------
+        entries: list[str] = []
 
-        # Sentiment Metadata
         if sentiment_context:
-            metadata_entries.append(f"sentiment context: {sentiment_context}")
+            entries.append(f"sentiment context: {sentiment_context}")
 
-        # Dataset Metadata
         if your_dataset_toggle:
-            metadata_entries.append("your_dataset: your_dataset")
+            entries.append("your_dataset: your_dataset")
 
         if our_datasets:
             try:
-                dataset_config = self.dataset_handler.load_dataset_config(our_datasets)
-                dataset_reference = dataset_config.get('dataset reference', '')
-                if dataset_reference:
-                    metadata_entries.append(f"our_datasets: {dataset_reference}")
-                else:
-                    print(f"Dataset reference not found for '{our_datasets}' in dataset_configs.json.")
+                ds_cfg = self.dataset_handler.load_dataset_config(our_datasets)
+                ds_ref = ds_cfg.get("dataset reference", our_datasets)
+                entries.append(f"our_datasets: {ds_ref}")
             except ValueError:
-                print(f"Dataset configuration for '{our_datasets}' not found.")
-        elif not your_dataset_toggle:
-            print("No valid dataset specified.")
+                print(f"[save_metadata] No config block for '{our_datasets}'")
 
-        # Data Sample Size
-        metadata_entries.append(f"background dataset size = {sample_size}")
+        entries.append(f"background dataset size = {sample_size}")
+        entries.append(
+            "shuffled data: shuffled background data"
+            if shuffle_data
+            else "shuffled data: constant background data"
+        )
 
-        # Shuffled Data
-        if shuffle_data:
-            metadata_entries.append("shuffled data: shuffled background data")
-        else:
-            metadata_entries.append("shuffled data: constant background data")
+        if LDA_analysis and LDA_num_topics is not None:
+            entries.append(f"number of LDA topics: {LDA_num_topics}")
 
-        # LDA Metadata
-        if LDA_analysis:
-            metadata_entries.append(f"number of LDA topics: {LDA_num_topics}")
+        # Grab extra fields (model_type, societally linear) from metadata.json
+        meta_list = self._load_metadata_json()
+        if meta_list and version_name:
+            match = next((m for m in meta_list if m.get("version_name") == version_name), {})
+            model_type_val = model_type or match.get("model_type", "unknown")
+            entries.append(f"model_type: {model_type_val}")
 
-        # Add 'model_type' information
-        if model_type:
-            metadata_entries.append(f"model_type: {model_type}")
-        else:
-            # Try to get 'model_type' from metadata.json using version_name
-            metadata_list = self.load_metadata_json()
-            if metadata_list:
-                model_type_value = "unknown"
-                if version_name:
-                    # Search for the entry with matching 'version_name'
-                    for entry in metadata_list:
-                        if entry.get('version_name') == version_name:
-                            model_type_value = entry.get('model_type', 'unknown')
-                            break
-                    metadata_entries.append(f"model_type: {model_type_value}")
-                else:
-                    print("No valid version_name specified for metadata lookup.")
-            else:
-                print("Metadata JSON could not be loaded.")
+            soc_lin_val = match.get("societally linear", "unknown")
+            entries.append(f"societally linear: {soc_lin_val}")
 
-        # Add 'societally linear' information from metadata.json
-        metadata_list = self.load_metadata_json()
-        if metadata_list:
-            societally_linear_value = "unknown"
-            if version_name:
-                # Search for the entry with matching 'version_name'
-                for entry in metadata_list:
-                    if entry.get('version_name') == version_name:
-                        societally_linear_value = entry.get('societally linear', 'unknown')
-                        break
-                if societally_linear_value in ['yes', 'no']:
-                    metadata_entries.append(f"societally linear: {societally_linear_value}")
-                else:
-                    metadata_entries.append("societally linear: unknown")
-            else:
-                print("No valid version_name specified for metadata lookup.")
-        else:
-            print("Metadata JSON could not be loaded.")
+        # ------------------------------------------------------------------
+        # (B) Pad to CSV length & write column
+        # ------------------------------------------------------------------
+        df = self.dataset_handler.read_csv()
 
-        # Determine the next available column name
-        existing_columns = df.columns.tolist()
-        metadata_column_name = "Metadata"
-        i = 1
-        while metadata_column_name in existing_columns:
-            metadata_column_name = f"Metadata_{i}"
-            i += 1
+        col_name = "Metadata"
+        idx = 1
+        while col_name in df.columns:
+            col_name = f"Metadata_{idx}"
+            idx += 1
 
-        # Pad the metadata list to match the length of the DataFrame
-        metadata_list_column = metadata_entries + [''] * (len(df) - len(metadata_entries))
-        df[metadata_column_name] = metadata_list_column
-
-        # Write back to CSV
+        padded = entries + [""] * (len(df) - len(entries))
+        df[col_name] = padded
         self.dataset_handler.write_csv(df)
+        print(f"[MetadataCSVDataSaver] Wrote '{col_name}' with {len(entries)} entries.")

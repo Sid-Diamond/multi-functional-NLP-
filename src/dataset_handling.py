@@ -1,189 +1,169 @@
+from pathlib import Path
 import os
 import random
-import pandas as pd
 import json
+import pandas as pd
 from datasets import load_dataset, Dataset
 
+# -----------------------------------------------------------------------------
+# Central helper for all data‑folder assets
+# -----------------------------------------------------------------------------
+class DataFiles:
+    """Resolve any file that lives under <project_root>/data."""
+
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent  # src/ → project root
+
+    @staticmethod
+    def path(fname: str) -> Path:
+        """Return a Path object for <project_root>/data/fname."""
+        return DataFiles.PROJECT_ROOT / "data" / fname
+
+
 class DatasetHandler:
-    def __init__(self, csv_file='output.csv'):
+    """Handles CSV I/O and quick dataset sampling."""
+
+    def __init__(self, csv_file: str = "output.csv"):
         self.csv_file = csv_file
 
-    def initialize_csv(self, your_dataset_toggle=False, our_datasets_toggle=False, our_datasets=None, sample_size=50, shuffle_data=True, split='test'):
-        """
-        Initializes the CSV file with uncleaned texts, time fields, and source fields.
-        """
-        # Initialize lists to collect data
-        uncleaned_texts_list = []
-        time_fields_list = []
-        source_fields_list = []
+    # ---------------------------------------------------------------------
+    # Metadata / JSON helpers
+    # ---------------------------------------------------------------------
+    def load_dataset_config(self, dataset_name: str) -> dict:
+        """Load the dataset‑specific block from *data/dataset_configs.json*."""
+        cfg_path = DataFiles.path("dataset_configs.json")
+        with cfg_path.open("r", encoding="utf-8") as f:
+            configs = json.load(f)
+        if dataset_name not in configs:
+            raise ValueError(f"Dataset configuration for '{dataset_name}' not found.")
+        return configs[dataset_name]
+
+    # ---------------------------------------------------------------------
+    # CSV initialisation
+    # ---------------------------------------------------------------------
+    def initialize_csv(
+        self,
+        your_dataset_toggle: bool = False,
+        our_datasets_toggle: bool = False,
+        our_datasets: str | None = None,
+        sample_size: int = 50,
+        shuffle_data: bool = True,
+        split: str = "test",
+    ) -> None:
+        """Create *output.csv* from either your own or our reference datasets."""
+
+        uncleaned_texts: list[str] = []
+        time_fields: list[str] = []
+        source_fields: list[str] = []
 
         if not your_dataset_toggle and not our_datasets_toggle:
-            print("One of your dataset or our dataset toggles has to be set to true.")
+            print("Either your_dataset_toggle or our_datasets_toggle must be True.")
             return
 
-        # Load data from your dataset first
+        # -------------------------------
+        # 1) User‑provided dataset
+        # -------------------------------
         if your_dataset_toggle:
-            # Load dataset configuration for your_dataset
-            dataset_config = self.load_dataset_config('your_dataset')
+            cfg = self.load_dataset_config("your_dataset")
+            csv_fname = cfg.get("csv_file", "your_dataset.csv")
+            csv_path = DataFiles.PROJECT_ROOT / csv_fname  # user CSV sits outside data/
+            if not csv_path.exists():
+                raise FileNotFoundError(f"Your dataset CSV '{csv_path}' not found.")
+            df = pd.read_csv(csv_path)
+            text_col = cfg.get("text_field", "Text")
+            if text_col not in df.columns:
+                raise KeyError(
+                    f"Text column '{text_col}' specified in dataset_configs.json not found in your dataset."
+                )
 
-            data_source = dataset_config.get('data_source', 'local_csv')
-            csv_file_name = dataset_config.get('csv_file', 'your_dataset.csv')
+            uncleaned_texts.extend(df[text_col].astype(str).tolist())
+            # time / source handling
+            time_col = cfg.get("time_field")
+            source_col = cfg.get("source_field")
+            default_source = cfg.get("default_source_value", "your_dataset")
 
-            # Load local CSV file
-            csv_file_path = os.path.join(os.path.dirname(__file__), csv_file_name)
-            if not os.path.exists(csv_file_path):
-                raise FileNotFoundError(f"Your dataset CSV file '{csv_file_path}' not found.")
-            df = pd.read_csv(csv_file_path)
-
-            # Do not perform sampling or shuffling on your_dataset
-
-            # Get the text column name from dataset configuration
-            text_field = dataset_config.get('text_field', 'Text')
-            if text_field not in df.columns:
-                raise KeyError(f"The text field '{text_field}' specified in dataset_configs.json does not exist in your dataset.")
-
-            uncleaned_texts_list.extend(df[text_field].astype(str).tolist())
-
-            # Time fields
-            time_field = dataset_config.get('time_field', None)
-            if time_field and time_field in df.columns:
-                time_fields_list.extend(df[time_field].astype(str).tolist())
+            if time_col and time_col in df.columns:
+                time_fields.extend(df[time_col].astype(str).tolist())
             else:
-                time_fields_list.extend([''] * len(df))
+                time_fields.extend([""] * len(df))
 
-            # Source fields
-            source_field = dataset_config.get('source_field', None)
-            default_source_value = dataset_config.get('default_source_value', 'your_dataset')
-
-            if source_field and source_field in df.columns:
-                source_fields_list.extend(df[source_field].astype(str).tolist())
+            if source_col and source_col in df.columns:
+                source_fields.extend(df[source_col].astype(str).tolist())
             else:
-                source_fields_list.extend([default_source_value] * len(df))
+                source_fields.extend([default_source] * len(df))
 
-        # Load data from our datasets after
+        # -------------------------------
+        # 2) Reference (HuggingFace/local) datasets
+        # -------------------------------
         if our_datasets_toggle and our_datasets:
-            dataset_config = self.load_dataset_config(our_datasets)
-            data_source = dataset_config.get('data_source', 'huggingface')
+            cfg = self.load_dataset_config(our_datasets)
+            data_source = cfg.get("data_source", "huggingface")
 
-            if data_source == 'local_csv':
-                # Load local CSV file
-                csv_file_path = os.path.join(os.path.dirname(__file__), dataset_config.get('csv_file', ''))
-                if not os.path.exists(csv_file_path):
-                    raise FileNotFoundError(f"CSV file '{csv_file_path}' not found.")
-                df = pd.read_csv(csv_file_path)
-                dataset = Dataset.from_pandas(df)
+            if data_source == "local_csv":
+                local_csv = DataFiles.PROJECT_ROOT / cfg.get("csv_file", "")
+                if not local_csv.exists():
+                    raise FileNotFoundError(f"CSV file '{local_csv}' not found.")
+                df_local = pd.read_csv(local_csv)
+                dataset = Dataset.from_pandas(df_local)
             else:
-                # Load the dataset from Hugging Face Datasets
                 dataset = load_dataset(our_datasets, split=split, trust_remote_code=True)
 
-            # Handle sampling and shuffling
             dataset = self.sample_dataset(dataset, sample_size, shuffle_data)
 
-            text_field = dataset_config.get('text_field')
-            time_field = dataset_config.get('time_field')
-            source_field = dataset_config.get('source_field')
-            default_source_value = dataset_config.get('default_source_value', our_datasets)
+            text_col = cfg.get("text_field")
+            time_col = cfg.get("time_field")
+            source_col = cfg.get("source_field")
+            default_source = cfg.get("default_source_value", our_datasets)
 
-            for example in dataset:
-                uncleaned_texts_list.append(example[text_field])
-                time_fields_list.append(example.get(time_field, ''))
-
-                if source_field and source_field in example:
-                    source_fields_list.append(example[source_field])
+            for ex in dataset:
+                uncleaned_texts.append(ex[text_col])
+                time_fields.append(ex.get(time_col, ""))
+                if source_col and source_col in ex:
+                    source_fields.append(ex[source_col])
                 else:
-                    source_fields_list.append(default_source_value)
+                    source_fields.append(default_source)
 
-        # Create the initial DataFrame
-        data = {
-            'Text': uncleaned_texts_list,
-            'Source': source_fields_list,
-            'Time': time_fields_list
-        }
-        initial_df = pd.DataFrame(data)
+        # -------------------------------
+        # 3) Dump to CSV
+        # -------------------------------
+        df_out = pd.DataFrame({
+            "Text": uncleaned_texts,
+            "Source": source_fields,
+            "Time": time_fields,
+        })
+        df_out.to_csv(self.csv_file, index=False)
+        print(f"Initialised '{self.csv_file}' with {len(df_out)} rows.")
 
-        # Save the initial CSV file
-        initial_df.to_csv(self.csv_file, index=False)
-        print(f"Initialized CSV file '{self.csv_file}' with data from the datasets.")
-
-    def load_dataset_config(self, dataset_name):
-        """
-        Loads dataset-specific configurations from a JSON file.
-        """
-        with open('dataset_configs.json', 'r') as f:
-            configs = json.load(f)
-        if dataset_name in configs:
-            return configs[dataset_name]
-        else:
-            raise ValueError(f"Dataset configuration for '{dataset_name}' not found.")
-
-    def sample_dataset(self, dataset, sample_size, shuffle_data):
-        """Sample and optionally shuffle a dataset.
-
-        Parameters
-        ----------
-        dataset : datasets.Dataset
-            The dataset to sample from.
-        sample_size : int
-            Number of examples to return. If ``None`` or larger than the
-            available data, the whole dataset is returned.
-        shuffle_data : bool
-            Whether to shuffle the data before sampling.
-
-        Returns
-        -------
-        datasets.Dataset
-            The sampled dataset.
-        """
-        # Print statement showing that the sampling process has started
-        print(f"Sampling {sample_size} data points from dataset...")
-
-        total_examples = len(dataset)
-        
-        # Ensure sample size does not exceed the total available examples
-        if sample_size and sample_size > total_examples:
-            sample_size = total_examples
-
+    # ------------------------------------------------------------------
+    # Utility helpers
+    # ------------------------------------------------------------------
+    @staticmethod
+    def sample_dataset(dataset: Dataset, sample_size: int, shuffle_data: bool) -> Dataset:
+        """Optionally shuffle then take a sample of `sample_size` rows."""
+        total = len(dataset)
+        if sample_size and sample_size > total:
+            sample_size = total
         if shuffle_data:
-            # Dynamically set the seed to ensure randomness in each run
-            dynamic_seed = random.randint(1, 10000)  # Random seed for each run
-            dataset = dataset.shuffle(seed=dynamic_seed)
-        
+            dataset = dataset.shuffle(seed=random.randint(1, 100_000))
         if sample_size:
-            # Select only the 'sample_size' examples (after shuffling if applicable)
             dataset = dataset.select(range(sample_size))
-
-        print(f"Sampled {sample_size} data points from dataset.")
-
         return dataset
 
-    def read_csv(self):
-        """
-        Reads the CSV file into a DataFrame.
-        """
+    # ------------------------------------------------------------------
+    # CSV conveniences
+    # ------------------------------------------------------------------
+    def read_csv(self) -> pd.DataFrame:
         if not os.path.exists(self.csv_file):
             raise FileNotFoundError(f"CSV file '{self.csv_file}' not found.")
-        df = pd.read_csv(self.csv_file)
-        return df
+        return pd.read_csv(self.csv_file)
 
-    def write_csv(self, df):
-        """
-        Writes the DataFrame back to the CSV file.
-        """
+    def write_csv(self, df: pd.DataFrame) -> None:
         df.to_csv(self.csv_file, index=False)
 
-    def get_texts_for_analysis(self):
-        """
-        Returns the texts from the CSV file for analysis.
-        """
-        df = self.read_csv()
-        texts = df['Text'].astype(str).tolist()
-        return texts
+    def get_texts_for_analysis(self) -> list[str]:
+        return self.read_csv()["Text"].astype(str).tolist()
 
-    def update_csv_with_results(self, results_dict):
-        """
-        Updates the CSV file with new analysis results.
-        """
+    def update_csv_with_results(self, results_dict: dict) -> None:
         df = self.read_csv()
-        for column_name, results in results_dict.items():
-            df[column_name] = results
+        for col, vals in results_dict.items():
+            df[col] = vals
         self.write_csv(df)

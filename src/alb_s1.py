@@ -4,11 +4,9 @@ import re
 import emoji
 import torch
 import torch.nn.functional as F
-import torch
 from torch.optim.optimizer import Optimizer
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict
 from transformers import default_data_collator
-import json
 import os
 import math
 import random
@@ -32,7 +30,8 @@ from transformers import (
     BertConfig,
     EarlyStoppingCallback
 )
-from typing import Optional, Dict
+import json
+from src.dataset_handling import DataFiles
 
 
 class SentimentBaseProcessor:
@@ -89,7 +88,11 @@ class SentimentBaseProcessor:
         return tokenized_texts
 
     def load_dataset_config(self, dataset_name):
-        with open('dataset_configs.json', 'r') as f:
+        """
+        Loads dataset-specific configurations from data/dataset_configs.json.
+        """
+        config_path = DataFiles.path("dataset_configs.json")
+        with config_path.open('r', encoding='utf-8') as f:
             configs = json.load(f)
         if dataset_name not in configs:
             raise ValueError(f"Dataset configuration '{dataset_name}' not found.")
@@ -115,7 +118,8 @@ class SentimentBaseProcessor:
 
         if sentiment_context:
             try:
-                with open('metadata.json', 'r') as f:
+                meta_path = DataFiles.path("metadata.json")
+                with meta_path.open('r', encoding='utf-8') as f:
                     metadata_list = json.load(f)
                 meta = next((m for m in metadata_list if m['version_name'] == sentiment_context), None)
                 if meta is None:
@@ -1852,20 +1856,21 @@ class SentimentInferencer(SentimentBaseProcessor):
         self.loaded_covariance = None
 
     def load_covariance_for_context(self, sentiment_context):
-        if sentiment_context is None:
-            return
-        with open('metadata.json', 'r') as f:
-            meta_list = json.load(f)
-        entry = next((m for m in meta_list if m['version_name'] == sentiment_context), None)
-        if not entry:
-            print(f"No metadata found for context '{sentiment_context}'.")
-            return
-        cov_path = os.path.join(os.path.dirname(entry['weights_filepath']), "cov_matrix.pt")
-        if not os.path.isfile(cov_path):
-            print(f"No covariance file found at {cov_path}.")
-            return
-        self.loaded_covariance = torch.load(cov_path)
-        print(f"Loaded covariance from {cov_path} for context '{sentiment_context}'.")
+            if sentiment_context is None:
+                return
+            meta_path = DataFiles.path("metadata.json")
+            with meta_path.open('r', encoding='utf-8') as f:
+                meta_list = json.load(f)
+            entry = next((m for m in meta_list if m['version_name'] == sentiment_context), None)
+            if not entry:
+                print(f"No metadata found for context '{sentiment_context}'.")
+                return
+            cov_path = os.path.join(os.path.dirname(entry['weights_filepath']), "cov_matrix.pt")
+            if not os.path.isfile(cov_path):
+                print(f"No covariance file found at {cov_path}.")
+                return
+            self.loaded_covariance = torch.load(cov_path)
+            print(f"Loaded covariance from {cov_path} for context '{sentiment_context}'.")
 
     def run_inference(self, texts, sentiment_context=None, dataset_name=None, sentiment_mode='classic'):
         if dataset_name:
@@ -1962,7 +1967,6 @@ class SentimentInferencer(SentimentBaseProcessor):
 
 
 class SentimentCSVDataSaver:
-    """Saves results to CSV."""
     def __init__(self, dataset_handler, sentiment_context=None):
         self.dataset_handler = dataset_handler
         self.sentiment_context = sentiment_context
@@ -1971,16 +1975,18 @@ class SentimentCSVDataSaver:
     def get_metadata_info(self):
         if self.sentiment_context is None:
             return self.dataset_handler.num_labels, None, None
-        with open('metadata.json', 'r') as f:
+        meta_path = DataFiles.path("metadata.json")
+        with meta_path.open('r', encoding='utf-8') as f:
             metadata_list = json.load(f)
         metadata = next((item for item in metadata_list if item['version_name'] == self.sentiment_context), None)
         if metadata is None:
             raise FileNotFoundError(f"No metadata found for '{self.sentiment_context}'.")
-        output_mode = metadata.get('output_mode')
-        class_labels = metadata.get('class_labels', None)
-        continuous_label = metadata.get('continuous_label', 'Sentiment')
-        return output_mode, class_labels, continuous_label
-
+        return (
+            metadata.get('output_mode'),
+            metadata.get('class_labels', None),
+            metadata.get('continuous_label', 'Sentiment')
+        )
+    
     def save_inference_results(self, predictions):
         df = self.dataset_handler.read_csv()
         if self.output_mode == 1:
