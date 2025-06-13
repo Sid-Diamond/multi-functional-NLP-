@@ -50,14 +50,14 @@ sentiment_mode = 'classic'
 max_seq_length = 64
 model_size = 'albert-base'
 
-fine_tune_or_inference = 'inference'
+fine_tune_or_inference = 'fine_tune'  # 'fine_tune' or 'inference'
 start_from_context = False
 USE_LOCAL_EXPERIMENTS = False
 save_fine_tune = 'yes'
 
 class_labels = ["Liberalism","Conservatism"]
 societally_linear = "yes"
-fine_tune_version_name = 'Fun Again hmmn'
+fine_tune_version_name = 'Dawgz out of the doghouse'
 fine_tune_quality = True
 batch_size = 25
 epochs = 10
@@ -67,7 +67,8 @@ betas = (0.9, 0.999)
 clip = 1
 p = 0.5
 eps = 1e-8
-diamond_uncertainty = True
+
+diamond_uncertainty = False
 consider_bias = 'false'
 n_proportion = 0.1
 f1_dropout_plot_step = (0.005,0.001,0.2)

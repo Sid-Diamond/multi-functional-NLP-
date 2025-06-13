@@ -8,7 +8,7 @@ from torch.optim.optimizer import Optimizer
 from typing import Tuple, Optional, Dict
 from transformers import default_data_collator
 import os
-import datetime
+from datetime import datetime
 import random
 import numpy as np
 from tqdm import tqdm
@@ -1851,7 +1851,7 @@ class SentimentInferencer(SentimentBaseProcessor):
     def load_covariance_for_context(self, sentiment_context):
             if sentiment_context is None:
                 return
-            meta_path = DataFiles.path("metadata.json")
+            meta_path = DataFiles.path("data/metadata.json")
             with meta_path.open('r', encoding='utf-8') as f:
                 meta_list = json.load(f)
             entry = next((m for m in meta_list if m['version_name'] == sentiment_context), None)
@@ -1968,7 +1968,7 @@ class SentimentCSVDataSaver:
     def get_metadata_info(self):
         if self.sentiment_context is None:
             return self.dataset_handler.num_labels, None, None
-        meta_path = DataFiles.path("metadata.json")
+        meta_path = DataFiles.path("data/metadata.json")
         with meta_path.open('r', encoding='utf-8') as f:
             metadata_list = json.load(f)
         metadata = next((item for item in metadata_list if item['version_name'] == self.sentiment_context), None)

@@ -582,7 +582,7 @@
     {
         "version_name": "FAdam 14. Political Idealogy",
         "dataset": "JyotiNayak/political_ideologies",
-        "weights_filepath": "model_versions\\FAdam 14. Political Idealogy\\pytorch_model.bin",
+        "weights_filepath": "model_versions/local_experiments/FAdam 14. Political Idealogy/pytorch_model.bin",
         "output_mode": 2,
         "model_type": "albert-base",
         "sample_size": 500,
@@ -604,58 +604,6 @@
         "eps": 1e-08,
         "f1_score": 0.9468744811961054,
         "accuracy": 0.946875
-    },
-    {
-        "version_name": "FAdam 14. Political Idealogy",
-        "dataset": "JyotiNayak/political_ideologies",
-        "weights_filepath": "model_versions/local_experiments/FAdam 14. Political Ideology",
-        "output_mode": 2,
-        "model_type": "albert-base",
-        "sample_size": 50,
-        "class_labels": [
-            "Liberalism",
-            "Conservatism"
-        ],
-        "societally_linear": "yes",
-        "lr": 2e-05,
-        "batch_size": 25,
-        "epochs": 3,
-        "weight_decay": 0.01,
-        "betas": [
-            0.9,
-            0.999
-        ],
-        "clip": 1,
-        "p": 0.5,
-        "eps": 1e-08,
-        "f1_score": 0.5361220393416298,
-        "accuracy": 0.54
-    },
-    {
-        "version_name": "FAdam 14. Political Idealogy",
-        "dataset": "JyotiNayak/political_ideologies",
-        "weights_filepath": "model_versions\\FAdam 14. Political Idealogy\\pytorch_model.bin",
-        "output_mode": 2,
-        "model_type": "albert-base",
-        "sample_size": 50,
-        "class_labels": [
-            "Liberalism",
-            "Conservatism"
-        ],
-        "societally_linear": "yes",
-        "lr": 2e-05,
-        "batch_size": 25,
-        "epochs": 3,
-        "weight_decay": 0.01,
-        "betas": [
-            0.9,
-            0.999
-        ],
-        "clip": 1,
-        "p": 0.5,
-        "eps": 1e-08,
-        "f1_score": 0.45599999999999996,
-        "accuracy": 0.52
     },
     {
         "version_name": "FAdam 15. Political Idealogy. Who let me cook",
@@ -1294,5 +1242,31 @@
         "eps": 1e-08,
         "f1_score": 0.03636363636363636,
         "accuracy": 0.1
+    },
+    {
+        "version_name": "Dawgz out of the doghouse",
+        "dataset": "climatebert/climate_sentiment",
+        "weights_filepath": "model_versions\\local_experiments\\Dawgz out of the doghouse",
+        "output_mode": 3,
+        "model_type": "albert-base",
+        "hyperparameters": {
+            "lr": 1e-05,
+            "batch_size": 25,
+            "epochs": 10,
+            "weight_decay": 0.01,
+            "betas": [
+                0.9,
+                0.999
+            ],
+            "clip": 1,
+            "p": 0.5,
+            "eps": 1e-08
+        },
+        "eval_metrics": {
+            "f1_score": 0.36536796536796534,
+            "accuracy": 0.44
+        },
+        "sample_size": 50,
+        "generated_at": "2025-06-13T10:33:07.470155Z"
     }
 ]
