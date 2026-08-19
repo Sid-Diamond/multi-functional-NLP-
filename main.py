@@ -50,7 +50,7 @@ sentiment_mode = 'classic'
 max_seq_length = 64
 model_size = 'albert-base'
 
-fine_tune_or_inference = 'fine_tune'  # 'fine_tune' or 'inference'
+fine_tune_or_inference = 'inference'  # 'fine_tune' or 'inference'
 start_from_context = False
 USE_LOCAL_EXPERIMENTS = False
 save_fine_tune = 'yes'

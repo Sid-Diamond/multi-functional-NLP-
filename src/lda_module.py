@@ -2,7 +2,6 @@ import re
 import numpy as np
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from gensim import corpora, models
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from tqdm import tqdm 
@@ -46,6 +45,8 @@ class LDAProcessor:
         self.num_topics = num_topics
 
     def perform_lda(self, texts):
+        from gensim import corpora, models
+
         dictionary = corpora.Dictionary(texts)
         
         # Track the progress of corpus creation with a progress bar
